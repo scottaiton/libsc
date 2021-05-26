@@ -60,6 +60,24 @@ sc_icompare (const void *v1, const void *v2)
   return sc_compare (v2, v1);
 }
 
+#elif defined __APPLE__
+
+/** Pass qsort-style comparison function as first argument */
+static int
+sc_compare_r (void* arg, const void *v1, const void *v2)
+{
+  sc_psort_t         *pst = (sc_psort_t *) arg;
+  return pst->compar (v1, v2);
+}
+
+/** Pass qsort-style comparison function as first argument */
+static int
+sc_icompare_r (void* arg, const void *v1, const void *v2)
+{
+  sc_psort_t         *pst = (sc_psort_t *) arg;
+  return pst->compar (v2, v1);
+}
+
 #else
 
 /** Pass qsort-style comparison function as third argument */
@@ -419,6 +437,9 @@ sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 #ifndef SC_HAVE_QSORT_R
       qsort (pst->my_base + (lo - pst->my_lo) * pst->size,
              n, pst->size, dir ? sc_compare : sc_icompare);
+#elif defined __APPLE__
+      qsort_r (pst->my_base + (lo - pst->my_lo) * pst->size,
+               n, pst->size, pst, dir ? sc_compare_r : sc_icompare_r);
 #else
       qsort_r (pst->my_base + (lo - pst->my_lo) * pst->size,
                n, pst->size, dir ? sc_compare_r : sc_icompare_r, pst);
